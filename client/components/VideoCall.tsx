@@ -1,160 +1,184 @@
-"use client";
+'use client';
 import { useEffect, useRef, useState } from 'react';
 import Peer from 'peerjs';
 import Draggable from 'react-draggable';
-import io from "socket.io-client";
+import { io, Socket } from 'socket.io-client';
 
-const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001");
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
 
-export default function VideoCall({ roomId, userName }: { roomId: string, userName: string }) {
-    const [peers, setPeers] = useState<any[]>([]); 
-    const [isMuted, setIsMuted] = useState(false);
-    const [isVideoOff, setIsVideoOff] = useState(false);
-    const [errorMsg, setErrorMsg] = useState<string | null>(null); // New Error State
-    
-    
-    const myVideoRef = useRef<HTMLVideoElement>(null);
-    const peerInstance = useRef<Peer | null>(null);
-    const draggableRef = useRef<HTMLDivElement>(null);
+export default function VideoCall({ roomId, userName }: { roomId: string; userName: string }) {
+  const [peers, setPeers] = useState<{ id: string; stream: MediaStream }[]>([]);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (peerInstance.current) return; 
+  const myVideoRef = useRef<HTMLVideoElement>(null);
+  const peerInstance = useRef<Peer | null>(null);
+  const socketRef = useRef<Socket | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const draggableRef = useRef<HTMLDivElement>(null);
 
-        const peer = new Peer(undefined as any);
-        peerInstance.current = peer;
+  useEffect(() => {
+    let peer: Peer;
 
-        peer.on('open', async (id) => {
-            try {
-                
-                let stream: MediaStream;
-                try {
-                    
-                    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                } catch (err) {
-                    console.warn("Failed to get Camera + Mic, trying Video only...");
-                    try {
-                        
-                        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-                    } catch (err2) {
-                        console.warn("Failed to get Video, trying Audio only...");
-                        
-                        stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
-                    }
-                }
+    const init = async () => {
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      } catch {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+        } catch {
+          setErrorMsg('No camera or mic found. Check browser permissions.');
+          return;
+        }
+      }
 
-                if (!stream!) {
-                    throw new Error("No devices found");
-                }
+      streamRef.current = stream;
+      if (myVideoRef.current) myVideoRef.current.srcObject = stream;
+      setErrorMsg(null);
 
-                
-                if (myVideoRef.current) myVideoRef.current.srcObject = stream;
-                setErrorMsg(null);
+      peer = new Peer(undefined as any, {
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+          ],
+        },
+      });
 
-                socket.emit('join-room', roomId, id);
+      peerInstance.current = peer;
 
-                peer.on('call', (call) => {
-                    call.answer(stream);
-                    call.on('stream', (remoteStream) => {
-                        addPeerStream(call.peer, remoteStream);
-                    });
-                });
+      peer.on('open', (myPeerId) => {
+        const socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+        socketRef.current = socket;
 
-                socket.on('user-connected', (userId) => {
-                    connectToNewUser(userId, stream, peer);
-                });
-
-            } catch (err) {
-                console.error("Critical Media Error:", err);
-                setErrorMsg("No Camera/Mic found. Check permissions.");
-            }
+        socket.emit('join-room', {
+          roomId,
+          user: { name: userName, peerId: myPeerId },
         });
 
-        return () => { socket.off('user-connected'); };
-    }, [roomId]);
-
-    
-    const addPeerStream = (peerId: string, stream: MediaStream) => {
-        setPeers(prev => {
-            if (prev.some(p => p.id === peerId)) return prev;
-            return [...prev, { id: peerId, stream }];
+        socket.on('user-joined', (joinedUser: any) => {
+          if (!joinedUser.peerId) return;
+          const call = peer.call(joinedUser.peerId, stream);
+          call?.on('stream', (remoteStream) => {
+            addPeer(joinedUser.peerId, remoteStream);
+          });
         });
+
+        socket.on('user-left', (socketId: string) => {
+          setPeers(prev => prev.filter(p => p.id !== socketId));
+        });
+      });
+
+      peer.on('call', (call) => {
+        call.answer(stream);
+        call.on('stream', (remoteStream) => {
+          addPeer(call.peer, remoteStream);
+        });
+      });
+
+      peer.on('error', (err) => {
+        console.error('PeerJS error:', err);
+      });
     };
 
-    const connectToNewUser = (userId: string, stream: MediaStream, peer: Peer) => {
-        const call = peer.call(userId, stream);
-        call.on('stream', (remoteStream) => addPeerStream(userId, remoteStream));
-    };
+    init();
 
-    const toggleAudio = () => {
-        const stream = myVideoRef.current?.srcObject as MediaStream;
-        if(stream && stream.getAudioTracks().length > 0) {
-            stream.getAudioTracks()[0].enabled = !stream.getAudioTracks()[0].enabled;
-            setIsMuted(!stream.getAudioTracks()[0].enabled);
-        }
+    return () => {
+      socketRef.current?.disconnect();
+      peerInstance.current?.destroy();
+      streamRef.current?.getTracks().forEach(t => t.stop());
     };
+  }, [roomId, userName]);
 
-    const toggleVideo = () => {
-        const stream = myVideoRef.current?.srcObject as MediaStream;
-        if(stream && stream.getVideoTracks().length > 0) {
-            stream.getVideoTracks()[0].enabled = !stream.getVideoTracks()[0].enabled;
-            setIsVideoOff(!stream.getVideoTracks()[0].enabled);
-        }
-    };
+  const addPeer = (id: string, stream: MediaStream) => {
+    setPeers(prev => {
+      if (prev.some(p => p.id === id)) return prev;
+      return [...prev, { id, stream }];
+    });
+  };
 
-    return (
-        <Draggable bounds="parent" handle=".drag-handle" nodeRef={draggableRef}>
-            <div ref={draggableRef} className="absolute bottom-10 right-10 z-50 bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-700 overflow-hidden flex flex-col w-72">
-                
-                {/* Header */}
-                <div className="drag-handle bg-gradient-to-r from-gray-800 to-gray-900 p-3 flex justify-between items-center cursor-move border-b border-gray-700">
-                    <div className="flex items-center gap-2">
-                        <div className={`w-2.5 h-2.5 rounded-full ${errorMsg ? 'bg-red-500' : 'bg-green-500 animate-pulse'}`}></div>
-                        <span className="text-xs text-gray-200 font-bold">Team Call</span>
-                    </div>
+  const toggleAudio = () => {
+    const stream = streamRef.current;
+    if (stream && stream.getAudioTracks().length > 0) {
+      const enabled = !stream.getAudioTracks()[0].enabled;
+      stream.getAudioTracks()[0].enabled = enabled;
+      setIsMuted(!enabled);
+    }
+  };
+
+  const toggleVideo = () => {
+    const stream = streamRef.current;
+    if (stream && stream.getVideoTracks().length > 0) {
+      const enabled = !stream.getVideoTracks()[0].enabled;
+      stream.getVideoTracks()[0].enabled = enabled;
+      setIsVideoOff(!enabled);
+    }
+  };
+
+  return (
+    <Draggable bounds="parent" handle=".drag-handle" nodeRef={draggableRef}>
+      <div
+        ref={draggableRef}
+        style={{
+          position: 'fixed', bottom: 80, right: 20, zIndex: 500,
+          background: 'rgba(10,10,14,0.95)', backdropFilter: 'blur(20px)',
+          borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.6)', overflow: 'hidden',
+          width: 280, display: 'flex', flexDirection: 'column',
+        }}
+      >
+        <div
+          className="drag-handle"
+          style={{
+            padding: '10px 14px', display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)',
+            cursor: 'move',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: errorMsg ? '#f87171' : '#34d399', boxShadow: errorMsg ? '0 0 6px #f87171' : '0 0 6px #34d399' }} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>Team Call</span>
+          </div>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>{peers.length + 1} participant{peers.length !== 0 ? 's' : ''}</span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: peers.length > 0 ? '1fr 1fr' : '1fr', gap: 1, background: '#000' }}>
+          <div style={{ position: 'relative', aspectRatio: '16/9', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {errorMsg ? (
+              <span style={{ color: '#f87171', fontSize: 10, textAlign: 'center', padding: 8 }}>⚠️ {errorMsg}</span>
+            ) : (
+              <>
+                <video ref={myVideoRef} muted autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
+                <div style={{ position: 'absolute', bottom: 4, left: 6, fontSize: 9, fontWeight: 700, color: '#fff', background: 'rgba(0,0,0,0.5)', padding: '1px 5px', borderRadius: 4 }}>You</div>
+                <div style={{ position: 'absolute', bottom: 4, right: 6, display: 'flex', gap: 4 }}>
+                  <button onClick={toggleAudio} style={{ width: 22, height: 22, borderRadius: '50%', border: 'none', background: isMuted ? '#f87171' : 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {isMuted ? '🔇' : '🎙️'}
+                  </button>
+                  <button onClick={toggleVideo} style={{ width: 22, height: 22, borderRadius: '50%', border: 'none', background: isVideoOff ? '#f87171' : 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {isVideoOff ? '🚫' : '📷'}
+                  </button>
                 </div>
+              </>
+            )}
+          </div>
 
-                {/* Content */}
-                <div className={`grid gap-0.5 bg-black ${peers.length > 0 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                    
-                    {/* My Video */}
-                    <div className="relative aspect-video bg-gray-800 group flex items-center justify-center">
-                        {errorMsg ? (
-                            <div className="text-red-400 text-xs text-center px-4 font-bold">
-                                ⚠️ {errorMsg}
-                            </div>
-                        ) : (
-                            <>
-                                <video ref={myVideoRef} muted autoPlay playsInline className="w-full h-full object-cover transform scale-x-[-1]" />
-                                <div className="absolute bottom-1 left-2 text-[10px] font-bold text-white bg-black/50 px-1.5 rounded">You</div>
-                                
-                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={toggleAudio} className={`p-2 rounded-full ${isMuted ? 'bg-red-500 text-white' : 'bg-white text-black'}`}>
-                                        {isMuted ? '🔇' : '🎙️'}
-                                    </button>
-                                    <button onClick={toggleVideo} className={`p-2 rounded-full ${isVideoOff ? 'bg-red-500 text-white' : 'bg-white text-black'}`}>
-                                        {isVideoOff ? '🚫' : '📷'}
-                                    </button>
-                                </div>
-                            </>
-                        )}
-                    </div>
-
-                    {/* Peers */}
-                    {peers.map((peer) => (
-                         <VideoPlayer key={peer.id} stream={peer.stream} />
-                    ))}
-                </div>
-            </div>
-        </Draggable>
-    );
+          {peers.map((p) => (
+            <VideoPlayer key={p.id} stream={p.stream} />
+          ))}
+        </div>
+      </div>
+    </Draggable>
+  );
 }
 
-const VideoPlayer = ({ stream }: { stream: MediaStream }) => {
-    const ref = useRef<HTMLVideoElement>(null);
-    useEffect(() => { if (ref.current) ref.current.srcObject = stream; }, [stream]);
-    return (
-        <div className="relative aspect-video bg-gray-800">
-            <video ref={ref} autoPlay playsInline className="w-full h-full object-cover" />
-        </div>
-    );
-};
+function VideoPlayer({ stream }: { stream: MediaStream }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => { if (ref.current) ref.current.srcObject = stream; }, [stream]);
+  return (
+    <div style={{ position: 'relative', aspectRatio: '16/9', background: '#111' }}>
+      <video ref={ref} autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+    </div>
+  );
+}

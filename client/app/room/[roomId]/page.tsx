@@ -1,10 +1,13 @@
 'use client';
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import NameEntryModal from '../../../components/NameEntryModal';
 import { getInitials, copyToClipboard } from '../../../lib/utils';
+import { io } from 'socket.io-client';
+
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
 
 const Board = dynamic(() => import('../../../components/Board'), { ssr: false });
 const CodeEditor = dynamic(() => import('../../../components/CodeEditor'), { ssr: false });
@@ -52,7 +55,21 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     setTimeout(() => setShareToast(false), 2500);
   };
 
-  const displayUsers: { name: string; color: string; initials: string }[] = user ? [user] : [];
+  const socketRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    const socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+    socketRef.current = socket;
+    socket.emit('join-room', { roomId, user });
+    socket.on('room-users', (users: any[]) => setRoomUsers(users));
+    socket.on('user-joined', () => {});
+    return () => { socket.disconnect(); };
+  }, [roomId, user]);
+
+  const displayUsers: { name: string; color: string; initials: string }[] = roomUsers.length > 0
+    ? roomUsers.map(u => ({ name: u.name, color: u.color, initials: u.initials || getInitials(u.name) }))
+    : user ? [user] : [];
 
   if (isMobile) {
     return (
