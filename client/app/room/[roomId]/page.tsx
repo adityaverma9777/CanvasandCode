@@ -59,11 +59,14 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
 
   useEffect(() => {
     if (!user) return;
-    const socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+    const socket = io(SOCKET_URL, {
+      transports: ['websocket', 'polling'],
+      reconnectionAttempts: 5,
+    });
     socketRef.current = socket;
     socket.emit('join-room', { roomId, user });
     socket.on('room-users', (users: any[]) => setRoomUsers(users));
-    socket.on('user-joined', () => {});
+    socket.on('user-left', () => {});
     return () => { socket.disconnect(); };
   }, [roomId, user]);
 
