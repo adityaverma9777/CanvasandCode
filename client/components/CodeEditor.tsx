@@ -27,24 +27,7 @@ const DEFAULT_FILES: FileNode[] = [
   { id:'f6', name:'README.md', type:'file', language:'markdown', content:`# My Canvas2Code Project\n\nBuilt collaboratively on Canvas2Code.\n\n## Getting Started\n\n\`\`\`bash\nnpm install\nnpm run dev\n\`\`\`` },
 ];
 
-const AI_RESPONSES: Record<string, string> = {
-  default: "I can help you with code. Try asking me to explain code, fix bugs, add features, or write tests.",
-  explain: "This code defines a React component that manages state with `useState`. It renders a button that increments a counter on each click. The component re-renders when state changes.",
-  fix: "I found a potential issue. Make sure to handle edge cases:\n\n```typescript\n// Before\nfunction divide(a: number, b: number) {\n  return a / b;\n}\n\n// After (safe)\nfunction divide(a: number, b: number): number {\n  if (b === 0) throw new Error('Division by zero');\n  return a / b;\n}\n```",
-  optimize: "Here's an optimized version using `useMemo` and `useCallback` to prevent unnecessary re-renders:\n\n```typescript\nconst memoized = useMemo(() => expensiveCalc(data), [data]);\nconst handler = useCallback(() => doSomething(), []);\n```",
-  test: "Here's a test for your component:\n\n```typescript\nimport { render, screen } from '@testing-library/react';\nimport userEvent from '@testing-library/user-event';\nimport App from './App';\n\ntest('counter increments on click', async () => {\n  render(<App />);\n  const btn = screen.getByRole('button');\n  await userEvent.click(btn);\n  expect(btn).toHaveTextContent('Count: 1');\n});\n```",
-  sort: "To sort in JavaScript:\n\n```javascript\n// Alphabetical\n['banana','apple'].sort();\n\n// Numeric (ascending)\n[10,1,5].sort((a,b) => a - b);\n\n// By property\nusers.sort((a,b) => a.name.localeCompare(b.name));\n```",
-};
 
-function getAIResponse(msg: string): string {
-  const lower = msg.toLowerCase();
-  if (lower.includes('explain') || lower.includes('what')) return AI_RESPONSES.explain;
-  if (lower.includes('fix') || lower.includes('bug') || lower.includes('error')) return AI_RESPONSES.fix;
-  if (lower.includes('optim') || lower.includes('performance') || lower.includes('memo')) return AI_RESPONSES.optimize;
-  if (lower.includes('test')) return AI_RESPONSES.test;
-  if (lower.includes('sort')) return AI_RESPONSES.sort;
-  return AI_RESPONSES.default;
-}
 
 function FileTree({ nodes, depth=0, onSelect }: { nodes: FileNode[]; depth?: number; onSelect: (f: FileNode) => void }) {
   const [open, setOpen] = useState<Record<string, boolean>>({});
@@ -87,7 +70,8 @@ export default function CodeEditor({ user, roomId }: Props) {
   const socketRef = useRef<Socket | null>(null);
   const suppressEmit = useRef(false);
   const emitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const tab = tabs.find(t => t.id === activeTab)!;
+  const conversationHistory = useRef<{ role: 'user' | 'assistant'; content: string }[]>([]);
+  const tab = tabs.find(t => t.id === activeTab)!;;
 
   useEffect(() => {
     const socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
@@ -158,18 +142,32 @@ export default function CodeEditor({ user, roomId }: Props) {
     finally { setIsRunning(false); }
   };
 
-  const sendAI = () => {
+  const sendAI = async () => {
     const q = aiInput.trim();
-    if (!q) return;
-    const userMsg = { id: generateId(), role:'user', text: q };
+    if (!q || aiTyping) return;
+    const userMsg = { id: generateId(), role: 'user', text: q };
     setAiMessages(p => [...p, userMsg]);
     setAiInput('');
     setAiTyping(true);
-    setTimeout(() => {
-      const resp = getAIResponse(q);
-      setAiMessages(p => [...p, { id: generateId(), role:'ai', text: resp }]);
+    conversationHistory.current.push({ role: 'user', content: q });
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: conversationHistory.current,
+          currentCode: tab?.content || '',
+        }),
+      });
+      const data = await res.json();
+      const reply = data.reply || 'No response received.';
+      conversationHistory.current.push({ role: 'assistant', content: reply });
+      setAiMessages(p => [...p, { id: generateId(), role: 'ai', text: reply }]);
+    } catch {
+      setAiMessages(p => [...p, { id: generateId(), role: 'ai', text: 'Connection error. Please try again.' }]);
+    } finally {
       setAiTyping(false);
-    }, 800 + Math.random() * 600);
+    }
   };
 
   useEffect(() => { chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior:'smooth' }); }, [aiMessages, aiTyping]);
