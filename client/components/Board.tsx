@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { Stage, Layer, Line, Rect, Ellipse, Arrow, Text, Transformer, Group } from 'react-konva';
 import { motion, AnimatePresence } from 'framer-motion';
-import { generateId, MOCK_COLLABORATORS } from '../lib/utils';
+import { generateId } from '../lib/utils';
 
 type Tool = 'select'|'pen'|'rect'|'circle'|'arrow'|'text'|'sticky'|'eraser';
 
@@ -31,8 +31,7 @@ export default function Board({ user, roomId }: Props) {
   const [scale, setScale] = useState(1);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [preview, setPreview] = useState<El|null>(null);
-  const [mockCursors, setMockCursors] = useState(MOCK_COLLABORATORS.map(m => ({ ...m, x: 300, y: 300 })));
-  const [activity, setActivity] = useState('');
+
   const isDrawing = useRef(false);
   const startPt = useRef({ x: 0, y: 0 });
   const stageRef = useRef<any>(null);
@@ -71,29 +70,7 @@ export default function Board({ user, roomId }: Props) {
     return () => window.removeEventListener('keydown', h);
   }, [undo, redo, selectedId, elements, push]);
 
-  useEffect(() => {
-    const acts = ['is drawing...','added a note','highlighted something','is sketching...'];
-    const interval = setInterval(() => {
-      const m = MOCK_COLLABORATORS[Math.floor(Math.random() * 2)];
-      setActivity(`${m.name} ${acts[Math.floor(Math.random() * acts.length)]}`);
-      setTimeout(() => setActivity(''), 3000);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, []);
 
-  useEffect(() => {
-    const moveCursor = (i: number) => {
-      setMockCursors(prev => {
-        const next = [...prev];
-        next[i] = { ...next[i], x: 100 + Math.random() * 700, y: 100 + Math.random() * 400 };
-        return next;
-      });
-    };
-    const t0 = setInterval(() => moveCursor(0), 3000 + Math.random() * 2000);
-    const t1 = setInterval(() => moveCursor(1), 4000 + Math.random() * 2000);
-    const t2 = setInterval(() => moveCursor(2), 5000 + Math.random() * 2000);
-    return () => { clearInterval(t0); clearInterval(t1); clearInterval(t2); };
-  }, []);
 
   useEffect(() => {
     if (trRef.current && selectedId) {
@@ -291,27 +268,10 @@ export default function Board({ user, roomId }: Props) {
         </Layer>
       </Stage>
 
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 30 }}>
-        {mockCursors.map(mc => (
-          <motion.div key={mc.id} animate={{ x: mc.x, y: mc.y }} transition={{ type: 'spring', stiffness: 60, damping: 15 }} style={{ position: 'absolute', top: 0, left: 0 }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill={mc.color} style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}><path d="M4 0l16 12-7 2-3 7z"/></svg>
-            <div style={{ background: mc.color, color: 'white', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 999, whiteSpace: 'nowrap', marginTop: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>{mc.name}</div>
-          </motion.div>
-        ))}
-      </div>
-
-      <div style={{ position: 'absolute', bottom: 16, left: 120, display: 'flex', alignItems: 'center', gap: 12, zIndex: 50 }}>
+      <div style={{ position: 'absolute', bottom: 16, left: 120, zIndex: 50 }}>
         <div style={{ background: 'rgba(14,14,20,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '6px 14px', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.6)', fontFamily: 'JetBrains Mono, monospace', backdropFilter: 'blur(10px)' }}>
           {Math.round(scale * 100)}%
         </div>
-        <AnimatePresence>
-          {activity && (
-            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} style={{ background: 'rgba(14,14,20,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '6px 14px', fontSize: 12, color: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success)', display: 'inline-block' }} className="animate-pulse-glow" />
-              {activity}
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   );

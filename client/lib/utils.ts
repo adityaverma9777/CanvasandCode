@@ -22,8 +22,4 @@ export function formatTime(date: Date): string {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-export const MOCK_COLLABORATORS = [
-  { id: 'mock-alex', name: 'Alex Chen', color: '#4f8ef7', initials: 'AC' },
-  { id: 'mock-sam', name: 'Sam Rivera', color: '#a78bfa', initials: 'SR' },
-  { id: 'mock-jordan', name: 'Jordan Lee', color: '#34d399', initials: 'JL' },
-];
+

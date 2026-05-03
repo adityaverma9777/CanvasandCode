@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Editor from '@monaco-editor/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { generateId, formatTime, MOCK_COLLABORATORS } from '../lib/utils';
+import { generateId, formatTime } from '../lib/utils';
 
 interface Props { user: { name: string; color: string; initials: string }; roomId: string; }
 
@@ -79,7 +79,7 @@ export default function CodeEditor({ user, roomId }: Props) {
   const [aiMessages, setAiMessages] = useState([{ id:'1', role:'ai', text:'Hi! I\'m your AI assistant. Ask me to explain code, fix bugs, add features, or write tests.' }]);
   const [aiInput, setAiInput] = useState('');
   const [aiTyping, setAiTyping] = useState(false);
-  const [cursors] = useState([{ ...MOCK_COLLABORATORS[0], line: 4 }]);
+
   const chatRef = useRef<HTMLDivElement>(null);
   const tab = tabs.find(t => t.id === activeTab)!;
 
@@ -182,12 +182,7 @@ export default function CodeEditor({ user, roomId }: Props) {
           </div>
 
           <div style={{ flex:1, position:'relative', overflow:'hidden' }}>
-            {cursors.map(c => (
-              <div key={c.id} style={{ position:'absolute', left:0, top: 20 + (c.line-1)*19, zIndex:10, pointerEvents:'none', display:'flex', alignItems:'center', gap:4 }}>
-                <div style={{ width:2, height:18, background:c.color }} />
-                <div style={{ background:c.color, color:'white', fontSize:10, fontWeight:600, padding:'1px 6px', borderRadius:4 }}>{c.name}</div>
-              </div>
-            ))}
+
             {tab && (
               <Editor height="100%" language={tab.language} value={tab.content} theme={theme} onChange={updateCode}
                 options={{ fontSize:14, minimap:{ enabled:true }, automaticLayout:true, fontFamily:"'JetBrains Mono', monospace", fontLigatures:true, lineHeight:1.6, padding:{ top:12 }, scrollBeyondLastLine:false }}
@@ -268,7 +263,7 @@ export default function CodeEditor({ user, roomId }: Props) {
       <div style={{ height:24, background: panelBg, borderTop:`1px solid ${borderClr}`, display:'flex', alignItems:'center', padding:'0 12px', gap:16, fontSize:11, color:'rgba(128,128,128,0.7)', flexShrink:0 }}>
         <span>{tab?.language?.toUpperCase()}</span>
         <div style={{ width:1, height:14, background: borderClr }} />
-        <span style={{ color:'#22c55e', display:'flex', alignItems:'center', gap:4 }}><span style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e', display:'inline-block' }} />{MOCK_COLLABORATORS[0].name} is here</span>
+        <span style={{ color:'#22c55e', display:'flex', alignItems:'center', gap:4 }}><span style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e', display:'inline-block' }} />{user.name}</span>
         <div style={{ flex:1 }} />
         <span>UTF-8</span>
         <span>LF</span>

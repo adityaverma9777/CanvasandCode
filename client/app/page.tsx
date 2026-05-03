@@ -1,9 +1,8 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const USER_COLORS = ['#4f8ef7','#a78bfa','#34d399','#f59e0b','#f87171','#22d3ee','#fb7185','#a3e635'];
 
 function generateRoomId() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -185,12 +184,7 @@ export default function LandingPage() {
             <div style={{ display: 'flex', gap: 6 }}>
               {['#f87171','#fbbf24','#34d399'].map(c => <div key={c} style={{ width: 12, height: 12, borderRadius: '50%', background: c }} />)}
             </div>
-            <div style={{ flex: 1, background: 'var(--bg-elevated)', borderRadius: 8, padding: '4px 12px', fontSize: 12, color: 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>canvas2code.vercel.app/room/XK4M2P</div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {['Alex','Sam','Jordan'].map((n, i) => (
-                <div key={n} style={{ width: 28, height: 28, borderRadius: '50%', background: USER_COLORS[i], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'white', border: '2px solid var(--bg-base)' }}>{n[0]}</div>
-              ))}
-            </div>
+            <div style={{ flex: 1, background: 'var(--bg-elevated)', borderRadius: 8, padding: '4px 12px', fontSize: 12, color: 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>canvas2code.vercel.app/room/••••••</div>
           </div>
           <div style={{ height: 420, background: '#0d0d10', display: 'flex' }}>
             <div style={{ width: 56, background: '#111114', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px 0', gap: 8 }}>
@@ -198,25 +192,9 @@ export default function LandingPage() {
             </div>
             <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
-              <motion.div animate={{ x: [80, 140, 200, 160, 80], y: [100, 60, 140, 200, 100] }} transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }} style={{ position: 'absolute', pointerEvents: 'none' }}>
-                <div style={{ width: 20, height: 20 }}>
-                  <svg viewBox="0 0 24 24" fill="#4f8ef7"><path d="M4 0l16 12-7 2-3 7z"/></svg>
-                </div>
-                <div style={{ background: '#4f8ef7', color: 'white', fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 999, whiteSpace: 'nowrap', marginTop: 2 }}>Alex</div>
-              </motion.div>
-              <motion.div animate={{ x: [280, 220, 300, 350, 280], y: [200, 280, 240, 160, 200] }} transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }} style={{ position: 'absolute', pointerEvents: 'none' }}>
-                <div style={{ width: 20, height: 20 }}>
-                  <svg viewBox="0 0 24 24" fill="#a78bfa"><path d="M4 0l16 12-7 2-3 7z"/></svg>
-                </div>
-                <div style={{ background: '#a78bfa', color: 'white', fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 999, whiteSpace: 'nowrap', marginTop: 2 }}>Sam</div>
-              </motion.div>
-              <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.6 }}>
-                <motion.path animate={{ d: ['M 60 120 Q 140 60 220 140', 'M 60 120 Q 160 80 240 130', 'M 60 120 Q 140 60 220 140'] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }} stroke="#4f8ef7" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-                <rect x="280" y="80" width="120" height="80" rx="8" stroke="rgba(167,139,250,0.7)" strokeWidth="2" fill="rgba(167,139,250,0.05)"/>
-                <circle cx="180" cy="280" r="40" stroke="rgba(52,211,153,0.7)" strokeWidth="2" fill="rgba(52,211,153,0.05)"/>
-              </svg>
-              <div style={{ position: 'absolute', bottom: 20, left: 20, background: 'rgba(255,251,186,0.95)', borderRadius: 10, padding: '10px 14px', width: 140, boxShadow: '0 4px 20px rgba(0,0,0,0.3)', fontSize: 12, color: '#333', fontWeight: 500 }}>
-                💡 Sticky Note<br/><span style={{ color: '#666', fontWeight: 400 }}>Click to edit...</span>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, opacity: 0.4 }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>Your canvas, your ideas</span>
               </div>
             </div>
           </div>

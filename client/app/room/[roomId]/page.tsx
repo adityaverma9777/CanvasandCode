@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import NameEntryModal from '../../../components/NameEntryModal';
-import { getInitials, copyToClipboard, MOCK_COLLABORATORS } from '../../../lib/utils';
+import { getInitials, copyToClipboard } from '../../../lib/utils';
 
 const Board = dynamic(() => import('../../../components/Board'), { ssr: false });
 const CodeEditor = dynamic(() => import('../../../components/CodeEditor'), { ssr: false });
@@ -52,9 +52,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     setTimeout(() => setShareToast(false), 2500);
   };
 
-  const allUsers: { name: string; color: string; initials: string; id?: string; socketId?: string }[] = user
-    ? [{ ...user, socketId: 'me' }, ...MOCK_COLLABORATORS.slice(0, 2)]
-    : MOCK_COLLABORATORS.slice(0, 2);
+  const displayUsers: { name: string; color: string; initials: string }[] = user ? [user] : [];
 
   if (isMobile) {
     return (
@@ -119,18 +117,18 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            {allUsers.map((u, i) => (
+            {displayUsers.map((u, i) => (
               <div
-                key={u.socketId || u.id || i}
+                key={i}
                 title={u.name}
-                style={{ width: 30, height: 30, borderRadius: '50%', background: u.color, border: '2px solid var(--bg-base)', marginLeft: i === 0 ? 0 : -8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'white', zIndex: allUsers.length - i, position: 'relative', cursor: 'default', flexShrink: 0 }}
+                style={{ width: 30, height: 30, borderRadius: '50%', background: u.color, border: '2px solid var(--bg-base)', marginLeft: i === 0 ? 0 : -8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'white', zIndex: displayUsers.length - i, position: 'relative', cursor: 'default', flexShrink: 0 }}
               >
                 {u.initials || getInitials(u.name)}
               </div>
             ))}
             <div style={{ marginLeft: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--success)', display: 'inline-block' }} className="animate-pulse-glow" />
-              <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>{allUsers.length} online</span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>{displayUsers.length} online</span>
             </div>
           </div>
 
