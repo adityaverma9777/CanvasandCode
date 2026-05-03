@@ -3,6 +3,9 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import Editor from '@monaco-editor/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateId, formatTime } from '../lib/utils';
+import { io, Socket } from 'socket.io-client';
+
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
 
 interface Props { user: { name: string; color: string; initials: string }; roomId: string; }
 
@@ -81,7 +84,34 @@ export default function CodeEditor({ user, roomId }: Props) {
   const [aiTyping, setAiTyping] = useState(false);
 
   const chatRef = useRef<HTMLDivElement>(null);
+  const socketRef = useRef<Socket | null>(null);
+  const suppressEmit = useRef(false);
+  const emitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tab = tabs.find(t => t.id === activeTab)!;
+
+  useEffect(() => {
+    const socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+    socketRef.current = socket;
+
+    socket.emit('join-room', { roomId, user });
+
+    socket.on('room-state', ({ code }: { code: { content: string; language: string } }) => {
+      if (code?.content && code.content !== '// Start coding together...\n') {
+        suppressEmit.current = true;
+        setTabs(p => p.map((t, i) => i === 0 ? { ...t, content: code.content, language: code.language || t.language } : t));
+        suppressEmit.current = false;
+      }
+    });
+
+    socket.on('code-update', ({ content, language }: { content: string; language: string }) => {
+      suppressEmit.current = true;
+      setTabs(p => p.map((t, i) => i === 0 ? { ...t, content, language: language || t.language } : t));
+      suppressEmit.current = false;
+    });
+
+    return () => { socket.disconnect(); };
+  }, [roomId]);
+;
 
   const openFile = (f: FileNode) => {
     const existing = tabs.find(t => t.name === f.name);
@@ -99,9 +129,15 @@ export default function CodeEditor({ user, roomId }: Props) {
     if (activeTab === id && next.length > 0) setActiveTab(next[Math.max(0, idx-1)].id);
   };
 
-  const updateCode = (val: string|undefined) => {
+  const updateCode = (val: string | undefined) => {
     if (!val || !tab) return;
     setTabs(p => p.map(t => t.id === activeTab ? { ...t, content: val, saved: false } : t));
+    if (!suppressEmit.current) {
+      if (emitTimer.current) clearTimeout(emitTimer.current);
+      emitTimer.current = setTimeout(() => {
+        socketRef.current?.emit('code-change', { content: val, language: tab.language });
+      }, 300);
+    }
   };
 
   const runCode = async () => {

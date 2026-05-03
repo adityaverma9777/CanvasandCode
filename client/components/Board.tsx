@@ -3,6 +3,9 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { Stage, Layer, Line, Rect, Ellipse, Arrow, Text, Transformer, Group } from 'react-konva';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateId } from '../lib/utils';
+import { io, Socket } from 'socket.io-client';
+
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
 
 type Tool = 'select'|'pen'|'rect'|'circle'|'arrow'|'text'|'sticky'|'eraser';
 
@@ -37,6 +40,42 @@ export default function Board({ user, roomId }: Props) {
   const stageRef = useRef<any>(null);
   const trRef = useRef<any>(null);
   const layerRef = useRef<any>(null);
+  const socketRef = useRef<Socket | null>(null);
+  const suppressEmit = useRef(false);
+
+  useEffect(() => {
+    const socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+    socketRef.current = socket;
+
+    socket.emit('join-room', { roomId, user });
+
+    socket.on('room-state', ({ canvasElements }: { canvasElements: El[] }) => {
+      if (canvasElements?.length) {
+        suppressEmit.current = true;
+        setElements(canvasElements);
+        setHistory([canvasElements]);
+        setHistIdx(0);
+        suppressEmit.current = false;
+      }
+    });
+
+    socket.on('canvas-elements', (els: El[]) => {
+      suppressEmit.current = true;
+      setElements(els);
+      suppressEmit.current = false;
+    });
+
+    socket.on('canvas-clear', () => {
+      suppressEmit.current = true;
+      setElements([]);
+      setHistory([[]]);
+      setHistIdx(0);
+      suppressEmit.current = false;
+    });
+
+    return () => { socket.disconnect(); };
+  }, [roomId]);
+
 
   const push = useCallback((els: El[]) => {
     const next = history.slice(0, histIdx + 1);
@@ -44,6 +83,9 @@ export default function Board({ user, roomId }: Props) {
     setHistory(next);
     setHistIdx(next.length - 1);
     setElements(els);
+    if (!suppressEmit.current) {
+      socketRef.current?.emit('canvas-elements', els);
+    }
   }, [history, histIdx]);
 
   const undo = useCallback(() => {

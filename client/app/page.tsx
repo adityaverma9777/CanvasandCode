@@ -224,7 +224,7 @@ export default function Home() {
   const line = LINES[lineIdx];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#08080a', color: '#fff', overflowX: 'hidden', fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: '#08080a', color: '#fff', overflowX: 'hidden', fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif", cursor: 'none' }}>
       <CustomCursor />
       <nav style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 8px 6px 14px', borderRadius: 999, backdropFilter: 'blur(28px)', background: 'rgba(12,12,16,0.8)', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 4px 32px rgba(0,0,0,0.5)', width: 'calc(100% - 80px)', maxWidth: 860 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>

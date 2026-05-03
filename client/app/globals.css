@@ -45,10 +45,7 @@ body {
   background: var(--bg-base);
   color: var(--text-primary);
   overflow-x: hidden;
-  cursor: none;
 }
-
-a, button, [role="button"] { cursor: none; }
 
 .cursor-dot {
   position: fixed;
