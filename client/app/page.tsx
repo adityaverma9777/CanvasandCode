@@ -232,6 +232,7 @@ export default function Home() {
             <Image src="/logo.png" alt="Canvas2Code" width={30} height={30} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
           </div>
           <span style={{ fontWeight: 700, fontSize: 14, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '0.05em', color: 'rgba(255,255,255,0.88)' }}>Canvas2Code</span>
+          <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 4, background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.08)', marginLeft: 4, letterSpacing: 0.5 }}>BETA</span>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           <button onClick={() => setShowJoin(v => !v)} style={{ padding: '6px 18px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 500, cursor: 'none', fontFamily: 'inherit', transition: 'all .2s' }} onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }} onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}>Join</button>

@@ -1,8 +1,11 @@
 <div align="center">
   <img src="client/public/logo.png" alt="Canvas2Code Logo" width="80" height="80" style="border-radius: 50%;" />
-  <h1>Canvas2Code</h1>
+  <h1>Canvas2Code <sup style="font-size: 12px; font-weight: 400; opacity: 0.6;">BETA</sup></h1>
   <p><strong>Design together. Code together. Ship together.</strong></p>
   <p>A real-time collaborative workspace that bridges the gap between design and engineering.</p>
+  
+  > [!IMPORTANT]
+  > **Beta Build Notice**: This project is currently in Beta. You may encounter minor synchronization inconsistencies or performance variations as we optimize the real-time engine.
 
   <p>
     <a href="https://canvastocode.vercel.app/" target="_blank">
