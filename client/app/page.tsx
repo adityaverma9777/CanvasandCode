@@ -3,14 +3,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
-
 function generateRoomId() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
-}
-
-function getRoomUrl(roomId: string) {
-  if (typeof window === 'undefined') return '';
-  return `${window.location.origin}/room/${roomId}`;
 }
 
 export default function LandingPage() {
@@ -18,254 +12,263 @@ export default function LandingPage() {
   const [joinId, setJoinId] = useState('');
   const [showJoin, setShowJoin] = useState(false);
   const [joinError, setJoinError] = useState('');
-  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const [hoveredFeature, setHoveredFeature] = useState<number | null>(null);
 
-  const handleCreate = () => {
-    const id = generateRoomId();
-    router.push(`/room/${id}`);
-  };
+  const handleCreate = () => router.push(`/room/${generateRoomId()}`);
 
   const handleJoin = () => {
     const cleaned = joinId.trim().toUpperCase();
-    if (cleaned.length < 4) {
-      setJoinError('Please enter a valid room code.');
-      return;
-    }
+    if (cleaned.length < 4) { setJoinError('Enter a valid room code.'); return; }
     router.push(`/room/${cleaned}`);
   };
 
   const features = [
-    {
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
-        </svg>
-      ),
-      title: 'Infinite Canvas',
-      desc: 'Draw, sketch, and annotate on an infinite whiteboard with full shape tools, sticky notes, and freehand pen.',
-      color: '#4f8ef7',
-    },
-    {
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
-        </svg>
-      ),
-      title: 'Collaborative IDE',
-      desc: 'Full Monaco-powered code editor with multi-tab support, file explorer, AI assistant, and live code execution.',
-      color: '#a78bfa',
-    },
-    {
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
-        </svg>
-      ),
-      title: 'Real-time Sync',
-      desc: 'See your teammates\' cursors, edits, and drawings update live. No refresh needed — always in sync.',
-      color: '#34d399',
-    },
-    {
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-        </svg>
-      ),
-      title: 'Video & Voice',
-      desc: 'Built-in WebRTC video and voice calls. See your team face-to-face while collaborating on ideas.',
-      color: '#f59e0b',
-    },
-  ];
-
-  const steps = [
-    { n: '01', title: 'Create a Room', desc: 'Click "Create Room" to instantly spin up a private collaborative space — no signup required.' },
-    { n: '02', title: 'Share the Link', desc: 'Copy the room link and send it to your teammates via Slack, Discord, or any chat.' },
-    { n: '03', title: 'Build Together', desc: 'Draw ideas on the whiteboard, write code side by side, and ship faster as a team.' },
+    { icon: '✦', color: '#4f8ef7', title: 'Infinite Canvas', desc: 'Draw, sketch, and annotate with a full suite of tools — pen, shapes, sticky notes, and more.' },
+    { icon: '</>', color: '#a78bfa', title: 'Live Code IDE', desc: 'Full Monaco editor with multi-tab support, AI assistant, file explorer, and real-time execution.' },
+    { icon: '⬡', color: '#34d399', title: 'Real-time Sync', desc: 'Every stroke, keystroke, and action synced instantly across all participants in the room.' },
+    { icon: '◉', color: '#f59e0b', title: 'Video & Voice', desc: 'Built-in WebRTC video calls floating right over your workspace — no extra tools needed.' },
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-base)', overflowX: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: '#080808', overflowX: 'hidden', color: 'white' }}>
 
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-        <div className="orb-1" style={{ position: 'absolute', top: '-20%', left: '-10%', width: 700, height: 700, borderRadius: '50%', background: 'radial-gradient(circle, rgba(79,142,247,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
-        <div className="orb-2" style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(167,139,250,0.1) 0%, transparent 70%)', filter: 'blur(40px)' }} />
-      </div>
-
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', height: 64, borderBottom: '1px solid var(--border)' }} className="glass-strong">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 10, background: 'linear-gradient(135deg, var(--primary), var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M12 8v8"/>
-            </svg>
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', height: 64 }}>
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          style={{ display: 'flex', alignItems: 'center', gap: 10 }}
+        >
+          <div style={{ width: 32, height: 32, borderRadius: 10, background: 'linear-gradient(135deg, #4f8ef7, #a78bfa)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M12 8v8"/></svg>
           </div>
-          <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.3px', color: 'var(--text-primary)' }}>Canvas2Code</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button className="btn-ghost" style={{ padding: '8px 18px', fontSize: 14 }} onClick={() => setShowJoin(true)}>Join a Room</button>
-          <button className="btn-primary" style={{ padding: '8px 18px', fontSize: 14 }} onClick={handleCreate}>Create Room</button>
-        </div>
-      </nav>
-
-      <section style={{ position: 'relative', zIndex: 1, paddingTop: 160, paddingBottom: 100, textAlign: 'center', padding: '160px 24px 100px' }}>
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', borderRadius: 999, background: 'rgba(79,142,247,0.1)', border: '1px solid rgba(79,142,247,0.25)', marginBottom: 32 }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--success)', display: 'inline-block' }} className="animate-pulse-glow" />
-            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--primary)' }}>No signup required · Free forever</span>
-          </div>
-
-          <h1 style={{ fontSize: 'clamp(42px, 7vw, 86px)', fontWeight: 800, letterSpacing: '-2px', lineHeight: 1.08, marginBottom: 24, maxWidth: 900, margin: '0 auto 24px' }}>
-            <span className="gradient-text">Design together.</span>
-            <br />
-            <span className="gradient-text-blue">Code together.</span>
-          </h1>
-
-          <p style={{ fontSize: 18, color: 'var(--text-secondary)', maxWidth: 520, margin: '0 auto 48px', lineHeight: 1.7, fontWeight: 400 }}>
-            The collaborative workspace where ideas become reality. Draw, sketch, and code in real-time with your team — no account needed.
-          </p>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <motion.button
-              className="btn-primary"
-              style={{ fontSize: 16, padding: '14px 32px' }}
-              onClick={handleCreate}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 5v14M5 12h14"/>
-              </svg>
-              Create a Room
-            </motion.button>
-
-            <motion.button
-              className="btn-ghost"
-              style={{ fontSize: 16, padding: '14px 32px' }}
-              onClick={() => setShowJoin(v => !v)}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
-              </svg>
-              Join a Room
-            </motion.button>
-          </div>
-
-          <AnimatePresence>
-            {showJoin && (
-              <motion.div
-                initial={{ opacity: 0, y: -10, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: 'auto' }}
-                exit={{ opacity: 0, y: -10, height: 0 }}
-                style={{ marginTop: 20, display: 'flex', justifyContent: 'center' }}
-              >
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: 'var(--bg-surface)', border: '1px solid var(--border-strong)', borderRadius: 16, padding: 6 }}>
-                  <input
-                    autoFocus
-                    value={joinId}
-                    onChange={e => { setJoinId(e.target.value.toUpperCase()); setJoinError(''); }}
-                    onKeyDown={e => e.key === 'Enter' && handleJoin()}
-                    placeholder="Room code (e.g. AB12CD)"
-                    style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: 15, fontWeight: 600, letterSpacing: 2, padding: '8px 16px', width: 220, fontFamily: 'JetBrains Mono, monospace' }}
-                    maxLength={10}
-                  />
-                  <button className="btn-primary" style={{ padding: '8px 20px', fontSize: 14 }} onClick={handleJoin}>Join →</button>
-                </div>
-                {joinError && <p style={{ color: 'var(--danger)', fontSize: 13, marginTop: 8 }}>{joinError}</p>}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.3px' }}>Canvas2Code</span>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          style={{ marginTop: 80, maxWidth: 1000, margin: '80px auto 0', borderRadius: 20, overflow: 'hidden', border: '1px solid var(--border)', boxShadow: '0 40px 100px rgba(0,0,0,0.6)' }}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          style={{ display: 'flex', alignItems: 'center', gap: 8 }}
         >
-          <div style={{ background: '#111114', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {['#f87171','#fbbf24','#34d399'].map(c => <div key={c} style={{ width: 12, height: 12, borderRadius: '50%', background: c }} />)}
+          <button
+            onClick={() => setShowJoin(v => !v)}
+            style={{ padding: '8px 20px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.8)', fontSize: 14, fontWeight: 500, cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'inherit', backdropFilter: 'blur(10px)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.2)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.12)'; }}
+          >
+            Join Room
+          </button>
+          <motion.button
+            onClick={handleCreate}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            style={{ padding: '8px 20px', borderRadius: 999, border: 'none', background: 'white', color: '#080808', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            Create Room →
+          </motion.button>
+        </motion.div>
+      </nav>
+
+      <AnimatePresence>
+        {showJoin && (
+          <motion.div
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            style={{ position: 'fixed', top: 72, right: 40, zIndex: 300, background: 'rgba(14,14,18,0.95)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 16, backdropFilter: 'blur(20px)', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}
+          >
+            <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.4)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Enter Room Code</p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                autoFocus
+                value={joinId}
+                onChange={e => { setJoinId(e.target.value.toUpperCase()); setJoinError(''); }}
+                onKeyDown={e => e.key === 'Enter' && handleJoin()}
+                placeholder="e.g. AB12CD"
+                maxLength={10}
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '9px 14px', color: 'white', fontSize: 15, fontWeight: 700, letterSpacing: 3, outline: 'none', width: 180, fontFamily: 'JetBrains Mono, monospace' }}
+              />
+              <button onClick={handleJoin} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: '#4f8ef7', color: 'white', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Join</button>
             </div>
-            <div style={{ flex: 1, background: 'var(--bg-elevated)', borderRadius: 8, padding: '4px 12px', fontSize: 12, color: 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>canvas2code.vercel.app/room/••••••</div>
-          </div>
-          <div style={{ height: 420, background: '#0d0d10', display: 'flex' }}>
-            <div style={{ width: 56, background: '#111114', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px 0', gap: 8 }}>
-              {[...Array(6)].map((_, i) => <div key={i} style={{ width: 34, height: 34, borderRadius: 8, background: i === 0 ? 'rgba(79,142,247,0.2)' : 'transparent', border: i === 0 ? '1px solid rgba(79,142,247,0.4)' : 'none' }} />)}
+            {joinError && <p style={{ color: '#f87171', fontSize: 12, marginTop: 8 }}>{joinError}</p>}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <section style={{ position: 'relative', height: '100vh', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'auto' }}>
+          <iframe
+            src="https://my.spline.design/boxeshover-S9A2m7zvp1OJJMKaaGQlYTp9/"
+            frameBorder="0"
+            style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+            title="3D Interactive Boxes"
+          />
+        </div>
+
+        <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', background: 'linear-gradient(to right, rgba(8,8,8,0.92) 0%, rgba(8,8,8,0.7) 45%, rgba(8,8,8,0.1) 75%, transparent 100%)' }} />
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 200, zIndex: 1, pointerEvents: 'none', background: 'linear-gradient(to top, #080808 0%, transparent 100%)' }} />
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 120, zIndex: 1, pointerEvents: 'none', background: 'linear-gradient(to bottom, rgba(8,8,8,0.6) 0%, transparent 100%)' }} />
+
+        <div style={{ position: 'relative', zIndex: 2, padding: '0 40px', maxWidth: 640, pointerEvents: 'none' }}>
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+          >
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 14px', borderRadius: 999, background: 'rgba(79,142,247,0.12)', border: '1px solid rgba(79,142,247,0.3)', marginBottom: 28 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399', display: 'inline-block', boxShadow: '0 0 8px #34d399' }} />
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#4f8ef7', letterSpacing: 0.5 }}>No account required · Free to use</span>
             </div>
-            <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, opacity: 0.4 }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>Your canvas, your ideas</span>
-              </div>
+
+            <h1 style={{ fontSize: 'clamp(44px, 6vw, 80px)', fontWeight: 800, lineHeight: 1.06, letterSpacing: '-2.5px', marginBottom: 24 }}>
+              <span style={{ display: 'block', background: 'linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.75) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Design.</span>
+              <span style={{ display: 'block', background: 'linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.75) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Code.</span>
+              <span style={{ display: 'block', background: 'linear-gradient(135deg, #4f8ef7 0%, #a78bfa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Together.</span>
+            </h1>
+
+            <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, marginBottom: 40, maxWidth: 480, fontWeight: 400 }}>
+              The real-time collaborative workspace where your team draws ideas and ships code — all in one room, instantly.
+            </p>
+
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', pointerEvents: 'auto' }}>
+              <motion.button
+                onClick={handleCreate}
+                whileHover={{ scale: 1.04, boxShadow: '0 0 40px rgba(79,142,247,0.35)' }}
+                whileTap={{ scale: 0.96 }}
+                style={{ padding: '14px 32px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #4f8ef7, #6366f1)', color: 'white', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 8 }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                Create a Room
+              </motion.button>
+              <motion.button
+                onClick={() => setShowJoin(v => !v)}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+                style={{ padding: '14px 32px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: 'white', fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', backdropFilter: 'blur(10px)' }}
+              >
+                Join a Room
+              </motion.button>
             </div>
-          </div>
+          </motion.div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2, duration: 0.8 }}
+          style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none' }}
+        >
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', letterSpacing: 2, textTransform: 'uppercase', fontWeight: 600 }}>Scroll to explore</span>
+          <motion.div animate={{ y: [0, 6, 0] }} transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </motion.div>
         </motion.div>
       </section>
 
-      <section style={{ position: 'relative', zIndex: 1, padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} style={{ textAlign: 'center', marginBottom: 56 }}>
-          <h2 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700, letterSpacing: '-1px', marginBottom: 12 }} className="gradient-text">Everything you need</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 16 }}>One workspace. All your collaboration tools.</p>
+      <section style={{ padding: '100px 40px', maxWidth: 1100, margin: '0 auto' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          style={{ textAlign: 'center', marginBottom: 64 }}
+        >
+          <h2 style={{ fontSize: 'clamp(30px, 4vw, 48px)', fontWeight: 800, letterSpacing: '-1.5px', marginBottom: 14 }}>
+            <span style={{ background: 'linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.6) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Everything in one place.</span>
+          </h2>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 17, maxWidth: 480, margin: '0 auto', lineHeight: 1.6 }}>One room. Infinite canvas. Full-featured IDE. Real-time voice.</p>
         </motion.div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
           {features.map((f, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.5 }}
-              onMouseEnter={() => setHoveredCard(i)}
-              onMouseLeave={() => setHoveredCard(null)}
-              className="card-hover"
-              style={{ padding: 28, borderRadius: 20, background: 'var(--bg-surface)', border: `1px solid ${hoveredCard === i ? f.color + '40' : 'var(--border)'}`, cursor: 'default', transition: 'border-color 0.3s ease' }}
+              transition={{ delay: i * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              onMouseEnter={() => setHoveredFeature(i)}
+              onMouseLeave={() => setHoveredFeature(null)}
+              style={{ padding: 28, borderRadius: 20, background: hoveredFeature === i ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.03)', border: `1px solid ${hoveredFeature === i ? f.color + '40' : 'rgba(255,255,255,0.07)'}`, cursor: 'default', transition: 'all 0.3s ease', transform: hoveredFeature === i ? 'translateY(-4px)' : 'translateY(0)' }}
             >
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: f.color + '18', border: `1px solid ${f.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: f.color, marginBottom: 16 }}>{f.icon}</div>
-              <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>{f.title}</h3>
-              <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>{f.desc}</p>
+              <div style={{ width: 44, height: 44, borderRadius: 13, background: f.color + '18', border: `1px solid ${f.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: f.color, marginBottom: 18, fontWeight: 700 }}>{f.icon}</div>
+              <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 8, letterSpacing: '-0.3px' }}>{f.title}</h3>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65 }}>{f.desc}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
-      <section style={{ position: 'relative', zIndex: 1, padding: '80px 24px', maxWidth: 800, margin: '0 auto' }}>
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} style={{ textAlign: 'center', marginBottom: 56 }}>
-          <h2 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700, letterSpacing: '-1px', marginBottom: 12 }} className="gradient-text">How it works</h2>
+      <section style={{ padding: '100px 40px', maxWidth: 760, margin: '0 auto' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+          style={{ marginBottom: 56, textAlign: 'center' }}
+        >
+          <h2 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 800, letterSpacing: '-1.2px' }}>
+            <span style={{ background: 'linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.6) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Up and running in seconds.</span>
+          </h2>
         </motion.div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-          {steps.map((s, i) => (
-            <motion.div key={i} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15, duration: 0.5 }} style={{ display: 'flex', gap: 24, padding: '28px 0', borderBottom: i < steps.length - 1 ? '1px solid var(--border)' : 'none' }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)', fontFamily: 'JetBrains Mono, monospace', minWidth: 28, paddingTop: 2 }}>{s.n}</span>
-              <div>
-                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>{s.title}</h3>
-                <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.6 }}>{s.desc}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        {[
+          { n: '01', title: 'Create a Room', desc: 'Click "Create a Room" — no sign-up, no waiting. You get a unique shareable room link instantly.' },
+          { n: '02', title: 'Invite Your Team', desc: 'Share the room link via Slack, Discord, or email. Your teammates join in one click.' },
+          { n: '03', title: 'Build Together', desc: 'Use the canvas to sketch ideas, switch to the IDE to write code, and call each other face-to-face.' },
+        ].map((s, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            style={{ display: 'flex', gap: 28, padding: '32px 0', borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}
+          >
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#4f8ef7', fontFamily: 'JetBrains Mono, monospace', minWidth: 28, paddingTop: 4 }}>{s.n}</span>
+            <div>
+              <h3 style={{ fontSize: 19, fontWeight: 700, marginBottom: 8, letterSpacing: '-0.3px' }}>{s.title}</h3>
+              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65 }}>{s.desc}</p>
+            </div>
+          </motion.div>
+        ))}
       </section>
 
-      <section style={{ position: 'relative', zIndex: 1, padding: '80px 24px', textAlign: 'center' }}>
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-          <div style={{ maxWidth: 600, margin: '0 auto', padding: '60px 40px', borderRadius: 28, background: 'var(--bg-surface)', border: '1px solid var(--border)', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: -80, right: -80, width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, rgba(79,142,247,0.15) 0%, transparent 70%)' }} />
-            <h2 style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-1px', marginBottom: 12 }} className="gradient-text">Ready to collaborate?</h2>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: 32, fontSize: 16 }}>Create a room in one click — no account, no setup, no waiting.</p>
-            <motion.button className="btn-primary" style={{ fontSize: 16, padding: '14px 36px' }} onClick={handleCreate} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
+      <section style={{ padding: '80px 40px 120px', textAlign: 'center' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+        >
+          <div style={{ maxWidth: 620, margin: '0 auto', padding: '64px 48px', borderRadius: 28, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: -100, left: -100, width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(79,142,247,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: -80, right: -80, width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle, rgba(167,139,250,0.1) 0%, transparent 70%)', pointerEvents: 'none' }} />
+            <h2 style={{ fontSize: 34, fontWeight: 800, letterSpacing: '-1px', marginBottom: 14 }}>
+              <span style={{ background: 'linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Ready to collaborate?</span>
+            </h2>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 16, marginBottom: 36, lineHeight: 1.6 }}>Create a room in one click. No account, no setup, no waiting.</p>
+            <motion.button
+              onClick={handleCreate}
+              whileHover={{ scale: 1.05, boxShadow: '0 0 50px rgba(79,142,247,0.3)' }}
+              whileTap={{ scale: 0.97 }}
+              style={{ padding: '15px 40px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #4f8ef7, #6366f1)', color: 'white', fontSize: 17, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
               Start a Room Now →
             </motion.button>
           </div>
         </motion.div>
       </section>
 
-      <footer style={{ position: 'relative', zIndex: 1, borderTop: '1px solid var(--border)', padding: '28px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '28px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 24, height: 24, borderRadius: 7, background: 'linear-gradient(135deg, var(--primary), var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 24, height: 24, borderRadius: 7, background: 'linear-gradient(135deg, #4f8ef7, #a78bfa)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M12 8v8"/></svg>
           </div>
           <span style={{ fontWeight: 700, fontSize: 14 }}>Canvas2Code</span>
         </div>
-        <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Built for teams who move fast.</p>
+        <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>Built for teams who move fast.</p>
       </footer>
     </div>
   );
