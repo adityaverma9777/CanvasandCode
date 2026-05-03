@@ -1,10 +1,57 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import gsap from 'gsap';
 
 function genId() { return Math.random().toString(36).substring(2, 8).toUpperCase(); }
+
+function CustomCursor() {
+  const dotRef  = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
+  const mouse = useRef({ x: 0, y: 0 });
+  const ring  = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const move = (e: MouseEvent) => {
+      mouse.current = { x: e.clientX, y: e.clientY };
+      if (dotRef.current) {
+        dotRef.current.style.left = e.clientX + 'px';
+        dotRef.current.style.top  = e.clientY + 'px';
+      }
+    };
+    window.addEventListener('mousemove', move);
+
+    let raf: number;
+    const loop = () => {
+      ring.current.x += (mouse.current.x - ring.current.x) * 0.12;
+      ring.current.y += (mouse.current.y - ring.current.y) * 0.12;
+      if (ringRef.current) {
+        ringRef.current.style.left = ring.current.x + 'px';
+        ringRef.current.style.top  = ring.current.y + 'px';
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+
+    const growOn  = () => { if (dotRef.current) dotRef.current.style.transform = 'translate(-50%,-50%) scale(2.5)'; };
+    const growOff = () => { if (dotRef.current) dotRef.current.style.transform = 'translate(-50%,-50%) scale(1)'; };
+    document.querySelectorAll('button,a,[role="button"]').forEach(el => {
+      el.addEventListener('mouseenter', growOn);
+      el.addEventListener('mouseleave', growOff);
+    });
+
+    return () => { window.removeEventListener('mousemove', move); cancelAnimationFrame(raf); };
+  }, []);
+
+  return (
+    <>
+      <div ref={dotRef}  className="cursor-dot"  />
+      <div ref={ringRef} className="cursor-ring" />
+    </>
+  );
+}
 
 const LINES = [
   { text: 'Where teams sketch, code, and ship.',   color: '#e2c68f' },
@@ -170,13 +217,16 @@ export default function Home() {
   const line = LINES[lineIdx];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#08080a', color: '#fff', overflowX: 'hidden', fontFamily: "'Inter', -apple-system, sans-serif" }}>
-
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 36px', height: 56, backdropFilter: 'blur(24px)', background: 'rgba(8,8,10,0.5)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-        <span style={{ fontWeight: 600, fontSize: 15, fontFamily: "'Syne', sans-serif", letterSpacing: '-0.3px', color: 'rgba(255,255,255,0.85)' }}>Canvas2Code</span>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setShowJoin(v => !v)} style={{ padding: '6px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .2s' }} onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }} onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}>Join</button>
-          <motion.button onClick={handleCreate} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }} style={{ padding: '6px 18px', borderRadius: 8, border: '1px solid rgba(226,198,143,0.25)', background: 'rgba(226,198,143,0.08)', color: '#e2c68f', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Create Room</motion.button>
+    <div style={{ minHeight: '100vh', background: '#08080a', color: '#fff', overflowX: 'hidden', fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif" }}>
+      <CustomCursor />
+      <nav style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 8px 6px 14px', borderRadius: 999, backdropFilter: 'blur(28px)', background: 'rgba(12,12,16,0.8)', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 4px 32px rgba(0,0,0,0.5)', width: 'calc(100% - 80px)', maxWidth: 860 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+          <Image src="/logo.png" alt="Canvas2Code" width={30} height={30} style={{ borderRadius: '50%', objectFit: 'cover', display: 'block' }} />
+          <span style={{ fontWeight: 700, fontSize: 14, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.3px', color: 'rgba(255,255,255,0.88)' }}>Canvas2Code</span>
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button onClick={() => setShowJoin(v => !v)} style={{ padding: '6px 18px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 500, cursor: 'none', fontFamily: 'inherit', transition: 'all .2s' }} onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }} onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}>Join</button>
+          <motion.button onClick={handleCreate} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} style={{ padding: '6px 20px', borderRadius: 999, border: '1px solid rgba(226,198,143,0.3)', background: 'rgba(226,198,143,0.1)', color: '#e2c68f', fontSize: 13, fontWeight: 600, cursor: 'none', fontFamily: 'inherit' }}>Create Room</motion.button>
         </div>
       </nav>
 
@@ -205,7 +255,7 @@ export default function Home() {
 
           <div ref={tagRef} style={{ opacity: 0, display: 'inline-flex', alignItems: 'center', gap: 10, padding: '5px 16px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)', marginBottom: 32 }}>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#a3b18a', boxShadow: '0 0 8px #a3b18a', display: 'inline-block' }} />
-            <span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.35)', letterSpacing: 0.5 }}>Real-time collaboration · No signup · Free</span>
+            <span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.35)', letterSpacing: 0.4, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Real-time collaboration · No signup · Free</span>
           </div>
 
           <h1 ref={titleRef} style={{ opacity: 0, fontSize: 'clamp(60px, 10vw, 130px)', fontWeight: 800, letterSpacing: '-5px', lineHeight: 0.92, margin: '0 0 32px', fontFamily: "'Syne', sans-serif", background: 'linear-gradient(175deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.25) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
@@ -214,7 +264,7 @@ export default function Home() {
 
           <div ref={subRef} style={{ opacity: 0, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 48 }}>
             <AnimatePresence mode="wait">
-              <motion.p key={lineIdx} initial={{ y: 28, opacity: 0, filter: 'blur(5px)' }} animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }} exit={{ y: -28, opacity: 0, filter: 'blur(5px)' }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }} style={{ fontSize: 'clamp(15px, 2vw, 20px)', fontWeight: 500, color: line.color, margin: 0, whiteSpace: 'nowrap', fontFamily: "'Space Grotesk', sans-serif", letterSpacing: '-0.2px' }}>
+              <motion.p key={lineIdx} initial={{ y: 28, opacity: 0, filter: 'blur(5px)' }} animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }} exit={{ y: -28, opacity: 0, filter: 'blur(5px)' }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }} style={{ fontSize: 'clamp(15px, 2vw, 21px)', fontWeight: 600, color: line.color, margin: 0, whiteSpace: 'nowrap', fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.3px' }}>
                 {line.text}
               </motion.p>
             </AnimatePresence>
