@@ -1,9 +1,11 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import gsap from 'gsap';
+
+const Spline = lazy(() => import('@splinetool/react-spline'));
 
 function genId() { return Math.random().toString(36).substring(2, 8).toUpperCase(); }
 
@@ -245,7 +247,11 @@ export default function Home() {
 
       <section style={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-          <iframe src="https://my.spline.design/boxeshover-S9A2m7zvp1OJJMKaaGQlYTp9/" frameBorder="0" style={{ width: '100%', height: '100%', border: 'none' }} title="3D" />
+          <Suspense fallback={null}>
+            <Spline scene="https://prod.spline.design/boxeshover-S9A2m7zvp1OJJMKaaGQlYTp9/scene.splinecode"
+              style={{ width: '100%', height: '100%' }}
+            />
+          </Suspense>
         </div>
         <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', background: 'radial-gradient(ellipse 60% 70% at 50% 48%, rgba(8,8,10,0.55) 0%, rgba(8,8,10,0.88) 55%, rgba(8,8,10,0.98) 100%)' }} />
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 80, zIndex: 1, pointerEvents: 'none', background: 'linear-gradient(to bottom, #08080a, transparent)' }} />

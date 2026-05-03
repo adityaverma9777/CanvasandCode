@@ -57,9 +57,9 @@ a, button, [role="button"] { cursor: none; }
   border-radius: 50%;
   background: rgba(255,255,255,0.9);
   pointer-events: none;
-  z-index: 9999;
+  z-index: 99999;
   transform: translate(-50%, -50%);
-  transition: width 0.15s, height 0.15s, background 0.15s;
+  will-change: left, top, transform;
 }
 
 .cursor-ring {
@@ -69,9 +69,9 @@ a, button, [role="button"] { cursor: none; }
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.25);
   pointer-events: none;
-  z-index: 9998;
+  z-index: 99998;
   transform: translate(-50%, -50%);
-  backdrop-filter: blur(0px);
+  will-change: left, top;
 }
 
 ::selection {
