@@ -20,7 +20,7 @@
     "jszip": "^3.10.1",
     "konva": "^10.0.12",
     "lucide-react": "^0.554.0",
-    "next": "16.0.3",
+    "next": "^16.2.4",
     "peerjs": "^1.5.5",
     "react": "19.2.0",
     "react-dom": "19.2.0",
@@ -37,7 +37,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.0.3",
+    "eslint-config-next": "^16.2.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
