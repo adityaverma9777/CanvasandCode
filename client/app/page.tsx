@@ -141,13 +141,17 @@ function CodeArt({ color }: { color: string }) {
   );
 }
 
+const AI_DOTS = [0,1,2,3,4,5].map(i => ({
+  top:  Math.round((50 + Math.sin(i * Math.PI / 3) * 45) * 1000) / 1000,
+  left: Math.round((50 + Math.cos(i * Math.PI / 3) * 45) * 1000) / 1000,
+}));
+
 function AIArt({ color }: { color: string }) {
-  const dots = Array.from({length:6},(_,i)=>i);
   return (
     <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
       <motion.div animate={{ rotate:360 }} transition={{ duration:20, repeat:Infinity, ease:'linear' }} style={{ width:100, height:100, position:'relative' }}>
-        {dots.map(i => (
-          <motion.div key={i} animate={{ scale:[0.8,1.2,0.8], opacity:[0.3,0.8,0.3] }} transition={{ duration:2, delay:i*0.3, repeat:Infinity }} style={{ position:'absolute', width:8, height:8, borderRadius:'50%', background:color, top:50+Math.sin(i*Math.PI/3)*45, left:50+Math.cos(i*Math.PI/3)*45, transform:'translate(-50%,-50%)', boxShadow:`0 0 12px ${color}60` }} />
+        {AI_DOTS.map((d, i) => (
+          <motion.div key={i} animate={{ scale:[0.8,1.2,0.8], opacity:[0.3,0.8,0.3] }} transition={{ duration:2, delay:i*0.3, repeat:Infinity }} style={{ position:'absolute', width:8, height:8, borderRadius:'50%', background:color, top:d.top, left:d.left, transform:'translate(-50%,-50%)', boxShadow:`0 0 12px ${color}60` }} />
         ))}
         <div style={{ position:'absolute', inset:'35%', borderRadius:'50%', border:`1px solid ${color}30` }} />
       </motion.div>
@@ -155,12 +159,13 @@ function AIArt({ color }: { color: string }) {
   );
 }
 
+const VIDEO_DURATIONS = [0.85, 1.1, 0.75, 1.2, 0.9, 1.05, 0.8, 1.15, 0.95, 1.0, 0.72, 1.3];
+
 function VideoArt({ color }: { color: string }) {
-  const bars = Array.from({length:12},(_,i)=>i);
   return (
     <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:3 }}>
-      {bars.map(i => (
-        <motion.div key={i} animate={{ scaleY:[0.3,1,0.3] }} transition={{ duration:0.8+Math.random()*0.6, delay:i*0.07, repeat:Infinity, ease:'easeInOut' }} style={{ width:4, height:40, borderRadius:2, background:`${color}90`, transformOrigin:'center' }} />
+      {VIDEO_DURATIONS.map((dur, i) => (
+        <motion.div key={i} animate={{ scaleY:[0.3,1,0.3] }} transition={{ duration:dur, delay:i*0.07, repeat:Infinity, ease:'easeInOut' }} style={{ width:4, height:40, borderRadius:2, background:`${color}90`, transformOrigin:'center' }} />
       ))}
     </div>
   );
@@ -223,8 +228,10 @@ export default function Home() {
       <CustomCursor />
       <nav style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 8px 6px 14px', borderRadius: 999, backdropFilter: 'blur(28px)', background: 'rgba(12,12,16,0.8)', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 4px 32px rgba(0,0,0,0.5)', width: 'calc(100% - 80px)', maxWidth: 860 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-          <Image src="/logo.png" alt="Canvas2Code" width={30} height={30} style={{ borderRadius: '50%', objectFit: 'cover', display: 'block' }} />
-          <span style={{ fontWeight: 700, fontSize: 14, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.3px', color: 'rgba(255,255,255,0.88)' }}>Canvas2Code</span>
+          <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }}>
+            <Image src="/logo.png" alt="Canvas2Code" width={30} height={30} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
+          </div>
+          <span style={{ fontWeight: 700, fontSize: 14, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '0.05em', color: 'rgba(255,255,255,0.88)' }}>Canvas2Code</span>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           <button onClick={() => setShowJoin(v => !v)} style={{ padding: '6px 18px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 500, cursor: 'none', fontFamily: 'inherit', transition: 'all .2s' }} onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }} onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}>Join</button>
@@ -248,7 +255,7 @@ export default function Home() {
       <section style={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
           <Suspense fallback={null}>
-            <Spline scene="https://prod.spline.design/boxeshover-S9A2m7zvp1OJJMKaaGQlYTp9/scene.splinecode"
+            <Spline scene="https://prod.spline.design/Lgqh3o36l-soUZlr/scene.splinecode"
               style={{ width: '100%', height: '100%' }}
             />
           </Suspense>
@@ -264,7 +271,7 @@ export default function Home() {
             <span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.35)', letterSpacing: 0.4, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Real-time collaboration · No signup · Free</span>
           </div>
 
-          <h1 ref={titleRef} style={{ opacity: 0, fontSize: 'clamp(60px, 10vw, 130px)', fontWeight: 800, letterSpacing: '-5px', lineHeight: 0.92, margin: '0 0 32px', fontFamily: "'Syne', sans-serif", background: 'linear-gradient(175deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.25) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+          <h1 ref={titleRef} style={{ opacity: 0, fontSize: 'clamp(60px, 10vw, 130px)', fontWeight: 800, letterSpacing: '0.02em', lineHeight: 1.1, margin: '0 0 32px', fontFamily: "'Plus Jakarta Sans', sans-serif", background: 'linear-gradient(175deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.25) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
             Canvas2Code
           </h1>
 
@@ -341,7 +348,7 @@ export default function Home() {
       </section>
 
       <footer style={{ borderTop: '1px solid rgba(255,255,255,0.04)', padding: '20px 36px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#08080a' }}>
-        <span style={{ fontWeight: 600, fontSize: 13, fontFamily: "'Syne', sans-serif", color: 'rgba(255,255,255,0.4)' }}>Canvas2Code</span>
+        <span style={{ fontWeight: 600, fontSize: 13, fontFamily: "'Plus Jakarta Sans', sans-serif", color: 'rgba(255,255,255,0.4)', letterSpacing: '0.05em' }}>Canvas2Code</span>
         <p style={{ color: 'rgba(255,255,255,0.12)', fontSize: 12 }}>Built for teams who move fast.</p>
       </footer>
 
