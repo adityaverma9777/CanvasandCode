@@ -3,6 +3,7 @@ import { useState, useEffect, use, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import NameEntryModal from '../../../components/NameEntryModal';
 import { getInitials, copyToClipboard } from '../../../lib/utils';
 import { io } from 'socket.io-client';
@@ -104,10 +105,10 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, var(--primary), var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M12 8v8"/></svg>
+            <div style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }}>
+              <Image src="/logo.png" alt="Canvas2Code" width={28} height={28} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
             </div>
-            <span style={{ fontWeight: 700, fontSize: 14, letterSpacing: '-0.3px' }}>Canvas2Code</span>
+            <span style={{ fontWeight: 700, fontSize: 14, letterSpacing: '0.05em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Canvas2Code</span>
             <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 4px', borderRadius: 4, background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.08)', marginLeft: 2 }}>BETA</span>
           </div>
 
