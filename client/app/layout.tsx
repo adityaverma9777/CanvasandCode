@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import KeepAlive from "../components/KeepAlive";
 
 export const metadata: Metadata = {
   title: "Canvas2Code — Design together. Code together.",
@@ -15,7 +16,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <KeepAlive />
+        {children}
+      </body>
     </html>
   );
 }
